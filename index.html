@@ -237,6 +237,11 @@
         <div class="metric-sub">since inception</div>
       </div>
       <div class="metric-block">
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value" id="m-winrate"></div>
+        <div class="metric-sub">all closed positions</div>
+      </div>
+      <div class="metric-block">
         <div class="metric-label">Sharpe Ratio</div>
         <div class="metric-value amber" id="m-sharpe"></div>
         <div class="metric-sub">daily, annualized</div>
@@ -305,6 +310,9 @@
       // Portfolio value (equity_cents from API)
       if (data.equity_cents) {
         document.getElementById('m-equity').textContent = '$' + (data.equity_cents / 100).toFixed(2);
+      }
+      if (m.win_rate !== undefined) {
+        document.getElementById('m-winrate').textContent = m.win_rate.toFixed(1) + '%';
       }
       document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
       document.getElementById('m-dd').textContent = m.max_drawdown.toFixed(1) + '%';
