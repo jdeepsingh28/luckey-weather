@@ -204,7 +204,6 @@
   <div class="header">
     <div class="header-left">
       <span class="logo">LW TERMINAL</span>
-      <span class="live-badge">LIVE</span>
     </div>
     <div class="header-right">
       <span class="date" id="header-date"></span>
@@ -250,7 +249,7 @@
       <div class="metric-block">
         <div class="metric-label">Active Markets</div>
         <div class="metric-value" id="m-markets"></div>
-        <div class="metric-sub">US temperature cities</div>
+        <div class="metric-sub">US cities</div>
       </div>
     </div>
 
@@ -299,19 +298,32 @@
       document.getElementById('m-markets').textContent = m.active_markets;
       document.getElementById('footer-updated').textContent = 'Updated ' + data.last_updated;
 
-      // Equity curve
+      // Equity curve — green above zero, red below zero
       new Chart(document.getElementById('equityChart'), {
         type: 'line',
         data: {
           labels: data.equity_curve.map(function(p) { return formatDate(p.date); }),
           datasets: [{
             data: data.equity_curve.map(function(p) { return p.cumulative_pct; }),
+            segment: {
+              borderColor: function(ctx) {
+                return (ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0) ? '#ff3333' : '#00ff41';
+              },
+              backgroundColor: function(ctx) {
+                return (ctx.p0.parsed.y < 0 && ctx.p1.parsed.y < 0)
+                  ? 'rgba(255, 51, 51, 0.08)' : 'rgba(0, 255, 65, 0.08)';
+              }
+            },
             borderColor: '#00ff41',
             backgroundColor: 'rgba(0, 255, 65, 0.08)',
             borderWidth: 2,
             pointRadius: 3,
-            pointBackgroundColor: '#00ff41',
-            pointBorderColor: '#00ff41',
+            pointBackgroundColor: data.equity_curve.map(function(p) {
+              return p.cumulative_pct >= 0 ? '#00ff41' : '#ff3333';
+            }),
+            pointBorderColor: data.equity_curve.map(function(p) {
+              return p.cumulative_pct >= 0 ? '#00ff41' : '#ff3333';
+            }),
             fill: true,
             tension: 0.3
           }]
