@@ -227,14 +227,14 @@
 
     <div class="panel metrics-panel">
       <div class="metric-block">
+        <div class="metric-label">Portfolio Value</div>
+        <div class="metric-value" id="m-equity" style="color: var(--white);"></div>
+        <div class="metric-sub">cash + positions</div>
+      </div>
+      <div class="metric-block">
         <div class="metric-label">Cumulative Return</div>
         <div class="metric-value positive" id="m-return"></div>
         <div class="metric-sub">since inception</div>
-      </div>
-      <div class="metric-block">
-        <div class="metric-label">Win Rate</div>
-        <div class="metric-value" id="m-winrate"></div>
-        <div class="metric-sub">all closed positions</div>
       </div>
       <div class="metric-block">
         <div class="metric-label">Sharpe Ratio</div>
@@ -302,7 +302,10 @@
       returnEl.textContent = (returnVal >= 0 ? '+' : '') + returnVal.toFixed(1) + '%';
       returnEl.className = 'metric-value ' + (returnVal >= 0 ? 'positive' : 'negative');
 
-      document.getElementById('m-winrate').textContent = m.win_rate.toFixed(1) + '%';
+      // Portfolio value (equity_cents from API)
+      if (data.equity_cents) {
+        document.getElementById('m-equity').textContent = '$' + (data.equity_cents / 100).toFixed(2);
+      }
       document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
       document.getElementById('m-dd').textContent = m.max_drawdown.toFixed(1) + '%';
       document.getElementById('m-markets').textContent = m.active_markets;
