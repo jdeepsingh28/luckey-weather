@@ -1,15 +1,14 @@
 {
-  "last_updated": "2026-03-04",
+  "last_updated": "2026-03-04T22:44:01.802634+00:00",
   "metrics": {
-    "win_rate": 95.7,
-    "sharpe": 9.64,
-    "max_drawdown": -1.9,
+    "sharpe": -0.39,
+    "max_drawdown": -5.2,
     "active_markets": 7
   },
   "equity_curve": [
     {
       "date": "2026-02-28",
-      "cumulative_pct": -1.92
+      "cumulative_pct": -1.94
     },
     {
       "date": "2026-03-01",
@@ -25,29 +24,29 @@
     },
     {
       "date": "2026-03-04",
-      "cumulative_pct": 6.12
+      "cumulative_pct": -0.67
     }
   ],
   "daily_pnl": [
     {
       "date": "2026-02-28",
-      "pct": -1.92
+      "pct": -1.94
     },
     {
       "date": "2026-03-01",
-      "pct": 1.09
+      "pct": 1.14
     },
     {
       "date": "2026-03-02",
-      "pct": 2.02
+      "pct": 2.04
     },
     {
       "date": "2026-03-03",
-      "pct": 3.6
+      "pct": 3.55
     },
     {
       "date": "2026-03-04",
-      "pct": 1.32
+      "pct": -5.22
     }
   ]
 }

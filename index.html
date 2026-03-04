@@ -267,7 +267,7 @@
 
     async function loadData() {
       try {
-        const resp = await fetch('data.json?' + Date.now());
+        const resp = await fetch('https://storage.googleapis.com/kalshi-dashboard-public/data.json?' + Date.now());
         return await resp.json();
       } catch (e) {
         console.error('Failed to load data.json', e);
@@ -280,10 +280,20 @@
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
+    function formatDateTime(isoStr) {
+      // Handle both "YYYY-MM-DD" (legacy) and ISO 8601 datetime
+      var d = isoStr.includes('T') ? new Date(isoStr) : new Date(isoStr + 'T12:00:00');
+      var dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      if (isoStr.includes('T')) {
+        var timeStr = d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+        return dateStr + ' ' + timeStr;
+      }
+      return dateStr;
+    }
+
     function render(data) {
-      const d = new Date(data.last_updated + 'T12:00:00');
-      document.getElementById('header-date').textContent =
-        d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+      var d = data.last_updated.includes('T') ? new Date(data.last_updated) : new Date(data.last_updated + 'T12:00:00');
+      document.getElementById('header-date').textContent = formatDateTime(data.last_updated);
 
       const m = data.metrics;
       const lastEquity = data.equity_curve[data.equity_curve.length - 1];
@@ -296,7 +306,7 @@
       document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
       document.getElementById('m-dd').textContent = m.max_drawdown.toFixed(1) + '%';
       document.getElementById('m-markets').textContent = m.active_markets;
-      document.getElementById('footer-updated').textContent = 'Updated ' + data.last_updated;
+      document.getElementById('footer-updated').textContent = 'Updated ' + formatDateTime(data.last_updated);
 
       // Equity curve — green above zero, red below zero
       new Chart(document.getElementById('equityChart'), {
