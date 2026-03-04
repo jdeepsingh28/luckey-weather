@@ -4,25 +4,400 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="robots" content="noindex, nofollow">
-  <title>Kalshi Temperature Markets — Jaideep Singh</title>
+  <title>LW Terminal</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
   <style>
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-      max-width: 860px;
-      margin: 60px auto;
-      padding: 0 24px;
-      color: #24292f;
-      line-height: 1.6;
+    @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600;700&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg: #0a0a0a;
+      --panel-bg: #111111;
+      --border: #2a2a2a;
+      --amber: #ffb000;
+      --green: #00ff41;
+      --red: #ff3333;
+      --dim: #555555;
+      --text: #cccccc;
+      --white: #ffffff;
     }
-    h1 { font-size: 2em; margin-bottom: 0.2em; }
-    .subtitle { color: #57606a; margin-top: 0; }
-    hr { border: none; border-top: 1px solid #d0d7de; margin: 2em 0; }
+
+    body {
+      font-family: 'IBM Plex Mono', 'Courier New', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* Header bar */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 24px;
+      border-bottom: 1px solid var(--border);
+      background: var(--panel-bg);
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--amber);
+      letter-spacing: 2px;
+    }
+
+    .live-badge {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--green);
+      padding: 2px 8px;
+      border-radius: 2px;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .header-right {
+      font-size: 12px;
+      color: var(--dim);
+    }
+
+    .header-right .date { color: var(--text); }
+
+    /* Grid layout */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 280px;
+      grid-template-rows: 1fr 1fr auto;
+      gap: 0;
+      max-width: 1200px;
+      margin: 0 auto;
+      height: calc(100vh - 49px);
+    }
+
+    .panel {
+      border: 1px solid var(--border);
+      padding: 16px 20px;
+      background: var(--panel-bg);
+    }
+
+    .panel-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--amber);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* Metrics panel (right side) */
+    .metrics-panel {
+      grid-row: 1 / 3;
+      grid-column: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+    }
+
+    .metric-block {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .metric-block:last-child { border-bottom: none; }
+
+    .metric-label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--dim);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+
+    .metric-value {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--white);
+      line-height: 1;
+    }
+
+    .metric-value.positive { color: var(--green); }
+    .metric-value.negative { color: var(--red); }
+    .metric-value.amber { color: var(--amber); }
+
+    .metric-sub {
+      font-size: 11px;
+      color: var(--dim);
+      margin-top: 4px;
+    }
+
+    /* Chart panels */
+    .equity-panel {
+      grid-row: 1;
+      grid-column: 1;
+    }
+
+    .pnl-panel {
+      grid-row: 2;
+      grid-column: 1;
+    }
+
+    .chart-container {
+      position: relative;
+      height: calc(100% - 40px);
+    }
+
+    /* Footer */
+    .footer {
+      grid-column: 1 / 3;
+      padding: 8px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 10px;
+      color: var(--dim);
+      display: flex;
+      justify-content: space-between;
+      background: var(--panel-bg);
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto 300px 300px auto;
+        height: auto;
+      }
+      .metrics-panel {
+        grid-row: 1;
+        grid-column: 1;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      .metric-block {
+        flex: 1;
+        min-width: 140px;
+        border-right: 1px solid var(--border);
+      }
+      .equity-panel { grid-row: 2; }
+      .pnl-panel { grid-row: 3; }
+      .footer { grid-column: 1; }
+      .metric-value { font-size: 24px; }
+      .chart-container { height: 240px; }
+    }
   </style>
 </head>
 <body>
-  <h1>Kalshi Temperature Markets Trading System</h1>
-  <p class="subtitle">Jaideep Singh &mdash; Quantitative Research &amp; Live Market Making</p>
-  <hr>
-  <p>Project write-up coming soon.</p>
+  <div class="header">
+    <div class="header-left">
+      <span class="logo">LW TERMINAL</span>
+      <span class="live-badge">LIVE</span>
+    </div>
+    <div class="header-right">
+      <span class="date" id="header-date"></span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <div class="panel equity-panel">
+      <div class="panel-title">Cumulative Return %</div>
+      <div class="chart-container">
+        <canvas id="equityChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel pnl-panel">
+      <div class="panel-title">Daily Return %</div>
+      <div class="chart-container">
+        <canvas id="pnlChart"></canvas>
+      </div>
+    </div>
+
+    <div class="panel metrics-panel">
+      <div class="metric-block">
+        <div class="metric-label">Cumulative Return</div>
+        <div class="metric-value positive" id="m-return"></div>
+        <div class="metric-sub">since inception</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-label">Win Rate</div>
+        <div class="metric-value" id="m-winrate"></div>
+        <div class="metric-sub">round-trip completion</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-label">Sharpe Ratio</div>
+        <div class="metric-value amber" id="m-sharpe"></div>
+        <div class="metric-sub">annualized</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-label">Max Drawdown</div>
+        <div class="metric-value negative" id="m-dd"></div>
+        <div class="metric-sub">peak to trough</div>
+      </div>
+      <div class="metric-block">
+        <div class="metric-label">Active Markets</div>
+        <div class="metric-value" id="m-markets"></div>
+        <div class="metric-sub">US temperature cities</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span>Kalshi Temperature Markets &mdash; Quantitative Market Making</span>
+      <span id="footer-updated"></span>
+    </div>
+  </div>
+
+  <script>
+    Chart.defaults.color = '#555555';
+    Chart.defaults.borderColor = '#2a2a2a';
+    Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+    Chart.defaults.font.size = 10;
+
+    async function loadData() {
+      try {
+        const resp = await fetch('data.json?' + Date.now());
+        return await resp.json();
+      } catch (e) {
+        console.error('Failed to load data.json', e);
+        return null;
+      }
+    }
+
+    function formatDate(dateStr) {
+      const d = new Date(dateStr + 'T12:00:00');
+      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function render(data) {
+      const d = new Date(data.last_updated + 'T12:00:00');
+      document.getElementById('header-date').textContent =
+        d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
+
+      const m = data.metrics;
+      const lastEquity = data.equity_curve[data.equity_curve.length - 1];
+      const returnVal = lastEquity.cumulative_pct;
+      const returnEl = document.getElementById('m-return');
+      returnEl.textContent = (returnVal >= 0 ? '+' : '') + returnVal.toFixed(1) + '%';
+      returnEl.className = 'metric-value ' + (returnVal >= 0 ? 'positive' : 'negative');
+
+      document.getElementById('m-winrate').textContent = m.win_rate.toFixed(1) + '%';
+      document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
+      document.getElementById('m-dd').textContent = m.max_drawdown.toFixed(1) + '%';
+      document.getElementById('m-markets').textContent = m.active_markets;
+      document.getElementById('footer-updated').textContent = 'Updated ' + data.last_updated;
+
+      // Equity curve
+      new Chart(document.getElementById('equityChart'), {
+        type: 'line',
+        data: {
+          labels: data.equity_curve.map(function(p) { return formatDate(p.date); }),
+          datasets: [{
+            data: data.equity_curve.map(function(p) { return p.cumulative_pct; }),
+            borderColor: '#00ff41',
+            backgroundColor: 'rgba(0, 255, 65, 0.08)',
+            borderWidth: 2,
+            pointRadius: 3,
+            pointBackgroundColor: '#00ff41',
+            pointBorderColor: '#00ff41',
+            fill: true,
+            tension: 0.3
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1a1a1a',
+              borderColor: '#2a2a2a',
+              borderWidth: 1,
+              titleColor: '#ffb000',
+              bodyColor: '#ffffff',
+              callbacks: {
+                label: function(ctx) { return (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(1) + '%'; }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { color: '#1a1a1a' },
+              ticks: { color: '#555555' }
+            },
+            y: {
+              grid: { color: '#1a1a1a' },
+              ticks: {
+                color: '#555555',
+                callback: function(v) { return (v >= 0 ? '+' : '') + v + '%'; }
+              }
+            }
+          }
+        }
+      });
+
+      // Daily P&L bars
+      var pnlData = data.daily_pnl.map(function(p) { return p.pct; });
+      var pnlColors = pnlData.map(function(v) { return v >= 0 ? '#00ff41' : '#ff3333'; });
+
+      new Chart(document.getElementById('pnlChart'), {
+        type: 'bar',
+        data: {
+          labels: data.daily_pnl.map(function(p) { return formatDate(p.date); }),
+          datasets: [{
+            data: pnlData,
+            backgroundColor: pnlColors,
+            borderColor: pnlColors,
+            borderWidth: 1,
+            borderRadius: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#1a1a1a',
+              borderColor: '#2a2a2a',
+              borderWidth: 1,
+              titleColor: '#ffb000',
+              bodyColor: '#ffffff',
+              callbacks: {
+                label: function(ctx) { return (ctx.parsed.y >= 0 ? '+' : '') + ctx.parsed.y.toFixed(1) + '%'; }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#555555' }
+            },
+            y: {
+              grid: { color: '#1a1a1a' },
+              ticks: {
+                color: '#555555',
+                callback: function(v) { return (v >= 0 ? '+' : '') + v + '%'; }
+              }
+            }
+          }
+        }
+      });
+    }
+
+    loadData().then(function(data) { if (data) render(data); });
+  </script>
 </body>
 </html>
