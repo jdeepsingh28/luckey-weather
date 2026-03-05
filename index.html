@@ -31,7 +31,6 @@
       padding: 0;
     }
 
-    /* Header bar */
     .header {
       display: flex;
       justify-content: space-between;
@@ -54,29 +53,15 @@
       letter-spacing: 2px;
     }
 
-    .live-badge {
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--bg);
-      background: var(--green);
-      padding: 2px 8px;
-      border-radius: 2px;
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.6; }
-    }
-
     .header-right {
-      font-size: 12px;
+      font-size: 11px;
       color: var(--dim);
+      text-align: right;
     }
 
+    .header-right .label { color: var(--dim); }
     .header-right .date { color: var(--text); }
 
-    /* Grid layout */
     .grid {
       display: grid;
       grid-template-columns: 1fr 280px;
@@ -104,7 +89,6 @@
       border-bottom: 1px solid var(--border);
     }
 
-    /* Metrics panel (right side) */
     .metrics-panel {
       grid-row: 1 / 3;
       grid-column: 2;
@@ -146,7 +130,8 @@
       margin-top: 4px;
     }
 
-    /* Chart panels */
+    .metric-sub .highlight { color: var(--amber); }
+
     .equity-panel {
       grid-row: 1;
       grid-column: 1;
@@ -162,19 +147,16 @@
       height: calc(100% - 40px);
     }
 
-    /* Footer */
     .footer {
       grid-column: 1 / 3;
-      padding: 8px 20px;
+      padding: 6px 20px;
       border-top: 1px solid var(--border);
-      font-size: 10px;
-      color: var(--dim);
-      display: flex;
-      justify-content: space-between;
+      font-size: 9px;
+      color: #333333;
       background: var(--panel-bg);
+      text-align: right;
     }
 
-    /* Responsive */
     @media (max-width: 768px) {
       .grid {
         grid-template-columns: 1fr;
@@ -206,6 +188,7 @@
       <span class="logo">LW TERMINAL</span>
     </div>
     <div class="header-right">
+      <span class="label">Last Updated</span><br>
       <span class="date" id="header-date"></span>
     </div>
   </div>
@@ -229,7 +212,7 @@
       <div class="metric-block">
         <div class="metric-label">Cumulative Return</div>
         <div class="metric-value positive" id="m-return"></div>
-        <div class="metric-sub">since inception</div>
+        <div class="metric-sub">since inception <span class="highlight" id="m-daily-avg"></span></div>
       </div>
       <div class="metric-block">
         <div class="metric-label">Win Rate</div>
@@ -239,12 +222,12 @@
       <div class="metric-block">
         <div class="metric-label">Sharpe Ratio</div>
         <div class="metric-value amber" id="m-sharpe"></div>
-        <div class="metric-sub">daily, annualized</div>
+        <div class="metric-sub" id="m-sharpe-sub">annualized, risk-free adj</div>
       </div>
       <div class="metric-block">
-        <div class="metric-label">Max Drawdown</div>
-        <div class="metric-value negative" id="m-dd"></div>
-        <div class="metric-sub">peak to trough</div>
+        <div class="metric-label">vs S&P 500</div>
+        <div class="metric-value" id="m-vs-sp500"></div>
+        <div class="metric-sub">this week</div>
       </div>
       <div class="metric-block">
         <div class="metric-label">Active Markets</div>
@@ -254,8 +237,7 @@
     </div>
 
     <div class="footer">
-      <span>Kalshi Climate Markets &mdash; Luckey Weather Trading</span>
-      <span id="footer-updated"></span>
+      S&P 500 and US Treasury data via yfinance
     </div>
   </div>
 
@@ -267,7 +249,7 @@
 
     async function loadData() {
       try {
-        const resp = await fetch('https://storage.googleapis.com/kalshi-dashboard-public/data.json?' + Date.now());
+        var resp = await fetch('https://storage.googleapis.com/kalshi-dashboard-public/data.json?' + Date.now());
         return await resp.json();
       } catch (e) {
         console.error('Failed to load data.json', e);
@@ -276,12 +258,11 @@
     }
 
     function formatDate(dateStr) {
-      const d = new Date(dateStr + 'T12:00:00');
+      var d = new Date(dateStr + 'T12:00:00');
       return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
     }
 
     function formatDateTime(isoStr) {
-      // Handle both "YYYY-MM-DD" (legacy) and ISO 8601 datetime
       var d = isoStr.includes('T') ? new Date(isoStr) : new Date(isoStr + 'T12:00:00');
       var dateStr = d.toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' });
       if (isoStr.includes('T')) {
@@ -292,25 +273,45 @@
     }
 
     function render(data) {
-      var d = data.last_updated.includes('T') ? new Date(data.last_updated) : new Date(data.last_updated + 'T12:00:00');
       document.getElementById('header-date').textContent = formatDateTime(data.last_updated);
 
-      const m = data.metrics;
-      const lastEquity = data.equity_curve[data.equity_curve.length - 1];
-      const returnVal = lastEquity.cumulative_pct;
-      const returnEl = document.getElementById('m-return');
+      var m = data.metrics;
+      var lastEquity = data.equity_curve[data.equity_curve.length - 1];
+      var returnVal = lastEquity.cumulative_pct;
+      var returnEl = document.getElementById('m-return');
       returnEl.textContent = (returnVal >= 0 ? '+' : '') + returnVal.toFixed(1) + '%';
       returnEl.className = 'metric-value ' + (returnVal >= 0 ? 'positive' : 'negative');
+
+      // Daily average return
+      if (m.daily_avg_return !== undefined) {
+        var avg = m.daily_avg_return;
+        document.getElementById('m-daily-avg').textContent =
+          '| avg ' + (avg >= 0 ? '+' : '') + avg.toFixed(2) + '%/day';
+      }
 
       if (m.win_rate !== undefined) {
         document.getElementById('m-winrate').textContent = m.win_rate.toFixed(1) + '%';
       }
-      document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
-      document.getElementById('m-dd').textContent = m.max_drawdown.toFixed(1) + '%';
-      document.getElementById('m-markets').textContent = m.active_markets;
-      document.getElementById('footer-updated').textContent = 'Updated ' + formatDateTime(data.last_updated);
 
-      // Equity curve — green above zero, red below zero
+      document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
+      if (m.risk_free_rate !== undefined) {
+        document.getElementById('m-sharpe-sub').textContent =
+          'annualized | 13-wk T-bill: ' + m.risk_free_rate.toFixed(2) + '%';
+      }
+
+      // vs S&P 500 this week
+      var vsEl = document.getElementById('m-vs-sp500');
+      if (m.vs_sp500_week !== undefined) {
+        var vs = m.vs_sp500_week;
+        vsEl.textContent = (vs >= 0 ? '+' : '') + vs.toFixed(1) + '%';
+        vsEl.className = 'metric-value ' + (vs >= 0 ? 'positive' : 'negative');
+      } else {
+        vsEl.textContent = '--';
+      }
+
+      document.getElementById('m-markets').textContent = m.active_markets;
+
+      // Equity curve
       new Chart(document.getElementById('equityChart'), {
         type: 'line',
         data: {
