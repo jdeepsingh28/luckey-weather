@@ -189,7 +189,9 @@
     </div>
     <div class="header-right">
       <span class="label">Last Updated</span><br>
-      <span class="date" id="header-date"></span>
+      <span class="date" id="header-date"></span><br>
+      <span class="label">Next Update</span><br>
+      <span class="date" id="next-update"></span>
     </div>
   </div>
 
@@ -225,11 +227,6 @@
         <div class="metric-sub" id="m-sharpe-sub">annualized, risk-free adj</div>
       </div>
       <div class="metric-block">
-        <div class="metric-label">vs S&P 500</div>
-        <div class="metric-value" id="m-vs-sp500"></div>
-        <div class="metric-sub">this week</div>
-      </div>
-      <div class="metric-block">
         <div class="metric-label">Active Markets</div>
         <div class="metric-value" id="m-markets"></div>
         <div class="metric-sub">US cities</div>
@@ -237,7 +234,7 @@
     </div>
 
     <div class="footer">
-      S&P 500 and US Treasury data via yfinance
+      Treasury yield data via yfinance
     </div>
   </div>
 
@@ -299,17 +296,12 @@
           'annualized | 13-wk T-bill: ' + m.risk_free_rate.toFixed(2) + '%';
       }
 
-      // vs S&P 500 this week
-      var vsEl = document.getElementById('m-vs-sp500');
-      if (m.vs_sp500_week !== undefined) {
-        var vs = m.vs_sp500_week;
-        vsEl.textContent = (vs >= 0 ? '+' : '') + vs.toFixed(1) + '%';
-        vsEl.className = 'metric-value ' + (vs >= 0 ? 'positive' : 'negative');
-      } else {
-        vsEl.textContent = '--';
-      }
-
       document.getElementById('m-markets').textContent = m.active_markets;
+
+      // Next update time
+      if (data.next_update) {
+        document.getElementById('next-update').textContent = formatDateTime(data.next_update);
+      }
 
       // Equity curve
       new Chart(document.getElementById('equityChart'), {
