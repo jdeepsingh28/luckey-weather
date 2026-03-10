@@ -222,9 +222,9 @@
         <div class="metric-sub">all closed positions</div>
       </div>
       <div class="metric-block">
-        <div class="metric-label">Sharpe Ratio</div>
-        <div class="metric-value amber" id="m-sharpe"></div>
-        <div class="metric-sub" id="m-sharpe-sub">annualized, risk-free adj</div>
+        <div class="metric-label">Profit Factor</div>
+        <div class="metric-value amber" id="m-pf"></div>
+        <div class="metric-sub">gross wins / gross losses</div>
       </div>
       <div class="metric-block">
         <div class="metric-label">Active Markets</div>
@@ -234,7 +234,7 @@
     </div>
 
     <div class="footer">
-      Treasury yield data via yfinance
+      Kalshi temperature markets
     </div>
   </div>
 
@@ -290,10 +290,8 @@
         document.getElementById('m-winrate').textContent = m.win_rate.toFixed(1) + '%';
       }
 
-      document.getElementById('m-sharpe').textContent = m.sharpe.toFixed(2);
-      if (m.risk_free_rate !== undefined) {
-        document.getElementById('m-sharpe-sub').textContent =
-          'annualized | 13-wk T-bill: ' + m.risk_free_rate.toFixed(2) + '%';
+      if (m.profit_factor !== undefined) {
+        document.getElementById('m-pf').textContent = m.profit_factor.toFixed(2) + 'x';
       }
 
       document.getElementById('m-markets').textContent = m.active_markets;
