@@ -65,11 +65,11 @@
     .grid {
       display: grid;
       grid-template-columns: 1fr 280px;
-      grid-template-rows: 1fr 1fr 0.7fr auto;
+      grid-template-rows: 1fr 1fr auto;
       gap: 0;
       max-width: 1200px;
       margin: 0 auto;
-      height: calc(100vh - 49px);
+      height: calc(100vh - 49px - 220px);
       overflow: hidden;
     }
 
@@ -150,14 +150,35 @@
       height: calc(100% - 40px);
     }
 
-    .map-panel {
-      grid-row: 3;
+    .footer {
       grid-column: 1 / 3;
+      padding: 6px 20px;
+      border-top: 1px solid var(--border);
+      font-size: 9px;
+      color: #333333;
+      background: var(--panel-bg);
+      text-align: right;
+    }
+
+    /* Map section — independent of the chart grid */
+    .map-section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 20px 8px;
+      background: var(--panel-bg);
+      border: 1px solid var(--border);
+      border-top: none;
+      height: 220px;
+    }
+
+    .map-section .panel-title {
+      margin-bottom: 4px;
+      padding-bottom: 4px;
     }
 
     .map-container {
-      position: relative;
-      height: calc(100% - 40px);
+      width: 100%;
+      height: calc(100% - 30px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -165,7 +186,6 @@
 
     .map-container svg {
       height: 100%;
-      max-width: 100%;
     }
 
     .map-container svg text {
@@ -179,20 +199,10 @@
       filter: drop-shadow(0 0 4px currentColor);
     }
 
-    .footer {
-      grid-column: 1 / 3;
-      padding: 6px 20px;
-      border-top: 1px solid var(--border);
-      font-size: 9px;
-      color: #333333;
-      background: var(--panel-bg);
-      text-align: right;
-    }
-
     @media (max-width: 768px) {
       .grid {
         grid-template-columns: 1fr;
-        grid-template-rows: auto 300px 300px 200px auto;
+        grid-template-rows: auto 300px 300px auto;
         height: auto;
       }
       .metrics-panel {
@@ -208,10 +218,10 @@
       }
       .equity-panel { grid-row: 2; }
       .pnl-panel { grid-row: 3; }
-      .map-panel { grid-row: 4; grid-column: 1; }
       .footer { grid-column: 1; }
       .metric-value { font-size: 24px; }
       .chart-container { height: 240px; }
+      .map-section { height: 200px; }
     }
   </style>
 </head>
@@ -266,15 +276,15 @@
       </div>
     </div>
 
-    <div class="panel map-panel">
-      <div class="panel-title">City P&L — <span id="map-date"></span></div>
-      <div class="map-container">
-        <svg id="cityMap" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-    </div>
-
     <div class="footer">
       Kalshi temperature markets
+    </div>
+  </div>
+
+  <div class="map-section">
+    <div class="panel-title">City P&L — <span id="map-date"></span></div>
+    <div class="map-container">
+      <svg id="cityMap" viewBox="0 0 800 400" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   </div>
 
